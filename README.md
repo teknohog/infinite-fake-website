@@ -14,6 +14,14 @@ software to the edge of its abilities.
 
 Yes, this is a dual-use technology. We're all adults here, aren't we?
 
+## Fork notice
+
+This is a modification of bediger4000's original software intended for
+the Lighttpd web server. It doesn't rely on Apache's SCRIPT_URL
+variable, and so it should be easier to install on any capable server,
+including Apache itself.
+
+
 ## Features
 
 * Delays a few seconds every time it's invoked.
@@ -32,57 +40,32 @@ on its website.
 
 ## Prerequisites
 
-* [Apache httpd](http://httpd.apache.org/)
-* [mod_php](https://wiki.apache.org/httpd/php) or some other way of invoking PHP
-* [mod_rewrite](https://httpd.apache.org/docs/current/mod/mod_rewrite.html)
+A web server with PHP and url rewriting capabilities. I use Lighttpd
+with PHP via mod_fastcgi, and mod_rewrite.
 
-## mod_rewrite Configuration
+## mod_rewrite Configuration on Lighttpd
 
-One you have Apache, `mod_php` and `mod_rewrite` installed and working (which I grant
-can be difficult), you need to configure `mod_rewrite` to redirect incoming
-HTTP requests from notorious bad actors to `bork.php`.
+Once you have Lighttpd, `PHP` and `mod_rewrite` installed and working
+(which I grant can be difficult), you need to configure `mod_rewrite`
+to redirect incoming HTTP requests from notorious bad actors to
+`bork.php`.
 
-    RewriteCond %{HTTP_USER_AGENT} SomeUglyBot
-    RewriteRule  ^.*(\?.*)*$ /bork.php$1 [L]
-    RewriteCond %{HTTP_REFERER} ^http://..*/bork.php
-    RewriteRule  ^.*(\?.*)*$ /bork.php$1 [L]
+    $HTTP["useragent"] =~ "(?i).*(bot|spider).*" {
+        url.rewrite-once = ( "^(.*)$" => "/bork.php?path=$1" )
+    }
 
-The first two lines cause any HTTP request with the string `someUglyBot` in its User Agent string to be satisfied by `bork.php` output. The last two lines allow you to try out `bork.php` yourself with a browser.
+This causes any HTTP request with the string `bot` or `spider` in its User Agent string (including uppercase variants) to be satisfied by `bork.php` output.
 
-There's too many ways to configure Apache for me to tell you where to put this. But it does need to be either in `httpd.conf` or some file included by `httpd.conf`.
+There's too many ways to configure Lighttpd for me to tell you where
+to put this. But it does need to be either in `lighttpd.conf` or some
+file included by `lighttpd.conf`.
 
-You replace `SomeUglyBot` by a string that appears in the User Agent of some organization that you want to mess with. I find that "AhrefsBot" and "MJ12bot" are two good candidate User Agent sub-strings.
+You replace `bot|spider` by a string that appears in the User Agent of some organization that you want to mess with. I find that "AhrefsBot" and "MJ12bot" are two good candidate User Agent sub-strings.
 
-### CentOS 8 Installation
+In order to test the output on a browser, use an address such as
+http://your-site.com/bork.php?path=test.html to see a full page. You
+can also use path=test.png etc. to fetch a single random image.
 
-#### Packages
-
-I think these are the packages you need to install explicitly.
-Installing these via `dnf` installs a number of other packages.
-
-* httpd
-* httpd-tools
-* php
-* php-gd
-
-#### Extra files
-
-* [/etc/httpd/conf.d/rewrite.conf](centos8_rewrite.conf)
-
-That particular rewrite will cause every HTTP request to run `bork.php`,
-giving any visitor a colorful, infinitely-deep website to visit!
-
-* Put `bork.php` in directory `/var/www/html/`.
-
-#### Change configuration
-
-Remove the '#' from a line in `/etc/httpd/conf/httpd.conf`:
-```
-#LoadModule rewrite_module modules/mod_rewrite.so
-```
-
-You need to `systemctl restart httpd` after installing packages,
-creating the `rewrite.conf` file and changing configuration.
 
 #### Characterization of randomly-chosed delay in responding
 

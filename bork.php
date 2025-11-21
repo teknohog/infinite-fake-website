@@ -894,8 +894,8 @@ if (rand(0, 1)) {
 	}
 }
 
-$url = parse_url($_SERVER['SCRIPT_URL']);
-$path = $url['path'];
+if (array_key_exists('path', $_REQUEST)) $path = $_REQUEST['path'];
+else $path = "foo.html"; 
 
 if ($path == '/robots.txt') {
 	header("Content-type: text/text");
