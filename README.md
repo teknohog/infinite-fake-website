@@ -63,8 +63,9 @@ file included by `lighttpd.conf`.
 You replace `bot|spider` by a string that appears in the User Agent of some organization that you want to mess with. I find that "AhrefsBot" and "MJ12bot" are two good candidate User Agent sub-strings.
 
 In order to test the output on a browser, use an address such as
-http://your-site.com/bork.php?path=test.html to see a full page. You
-can also use path=test.png etc. to fetch a single random image.
+http://your-site.com/bork.php. You can also define file types with a
+?path=... request, e.g. http://your-site.com/bork.php?path=foo.png to
+fetch a single random image.
 
 
 #### Characterization of randomly-chosed delay in responding
