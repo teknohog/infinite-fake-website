@@ -53,8 +53,14 @@ to redirect incoming HTTP requests from notorious bad actors to
     $HTTP["useragent"] =~ "(?i).*(bot|spider).*" {
         url.rewrite-once = ( "^(.*)$" => "/bork.php?path=$1" )
     }
+    else $HTTP["referer"] =~ "^http://.*/bork.php" {
+    	url.rewrite-once = ( "^(.*)$" => "/bork.php?path=$1" )
+    }
 
-This causes any HTTP request with the string `bot` or `spider` in its User Agent string (including uppercase variants) to be satisfied by `bork.php` output.
+The first rule causes any HTTP request with the string `bot` or
+`spider` in its User Agent string (including uppercase variants) to be
+satisfied by `bork.php` output. The second rule allows you to try out
+`bork.php` yourself with a browser.
 
 There's too many ways to configure Lighttpd for me to tell you where
 to put this. But it does need to be either in `lighttpd.conf` or some
