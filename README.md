@@ -51,10 +51,10 @@ to redirect incoming HTTP requests from notorious bad actors to
 `bork.php`.
 
     $HTTP["useragent"] =~ "(?i).*(bot|spider).*" {
-        url.rewrite-once = ( "^(.*)$" => "/bork.php?path=$1" )
+        url.rewrite-once = ( "^(.*)$" => "/bork.php" )
     }
     else $HTTP["referer"] =~ "^http://.*/bork.php" {
-    	url.rewrite-once = ( "^(.*)$" => "/bork.php?path=$1" )
+    	url.rewrite-once = ( "^(.*)$" => "/bork.php" )
     }
 
 The first rule causes any HTTP request with the string `bot` or
@@ -62,17 +62,17 @@ The first rule causes any HTTP request with the string `bot` or
 satisfied by `bork.php` output. The second rule allows you to try out
 `bork.php` yourself with a browser.
 
-There's too many ways to configure Lighttpd for me to tell you where
+There are too many ways to configure Lighttpd for me to tell you where
 to put this. But it does need to be either in `lighttpd.conf` or some
 file included by `lighttpd.conf`.
 
-You replace `bot|spider` by a string that appears in the User Agent of some organization that you want to mess with. I find that "AhrefsBot" and "MJ12bot" are two good candidate User Agent sub-strings.
+You can replace `bot|spider` by a string that appears in the User
+Agent of some organization that you want to mess with. I find that
+"AhrefsBot" and "MJ12bot" are two good candidate User Agent
+sub-strings.
 
 In order to test the output on a browser, use an address such as
-http://your-site.com/bork.php. You can also define file types with a
-?path=... request, e.g. http://your-site.com/bork.php?path=foo.png to
-fetch a single random image.
-
+http://your-site.com/bork.php.
 
 #### Characterization of randomly-chosed delay in responding
 
