@@ -74,6 +74,18 @@ sub-strings.
 In order to test the output on a browser, use an address such as
 http://your-site.com/bork.php.
 
+You can even return junk pages in place of of 404 errors, using
+
+    server.error-handler-404 = "/bork.php"
+
+This might not be a good idea in general, and certainly not on
+"professional" or "official" sites. But on my personal servers, I
+think it's fair game against people who fish for entry vectors such as
+"/password.php" or "/admin/login.asp". Of course, you also can write
+more specific rewrite rules for these, matching $HTTP["url"] against
+strings like these.
+
+
 #### Characterization of randomly-chosed delay in responding
 
 `bork.php` does do some tarpitting.
