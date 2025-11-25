@@ -983,8 +983,8 @@ if (strstr($path, ".json")) {
 		rnd_bin(8192);
 		exit(0);
 	}
-	if (($path != '/') && !strpos($path, ".htm") && !strpos($path, ".php")) {
-		header("Content-Type: application/stupid-motherfucker");
+    if (($path != '/') && !strpos($path, ".htm") && !strpos($path, ".php") && !strpos($path, ".shtml")) {
+    header("Content-Type: application/stupid-motherfucker");
 		header("Content-Transfer-Encoding: binary");
 		header("Content-Length: 4096");
 		rnd_bin(mt_rand(1024, 8192));
