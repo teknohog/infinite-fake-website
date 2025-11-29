@@ -664,7 +664,41 @@ function send_image($suffix) {
 }
 
 function send_image_size($suffix, $width, $height) {
+    // 2025-11-21 More shapes
+    switch (rand(0, 4)) {
+    case 0:
+        $img = make_image_rect($width, $height);
+        break;
+    case 1:
+        $img = make_image_juliaset(min($width, $height));
+        break;
+    case 2:
+        $img = make_image_ellipses($width, $height);
+        break;
+    case 3:
+        $img = make_image_voronoi($width, $height);
+        break;
+    case 4:
+        $img = make_image_lifs_randmode(min($width, $height));
+        break;
+    }
 
+	switch ($suffix) {
+	case 'png':
+		imagepng($img);
+		break;
+	case 'gif':
+		imagegif($img);
+		break;
+	case 'jpeg':
+	case 'jpg':
+		imagejpeg($img, NULL, rand(0, 100));
+		break;
+	}
+	imagedestroy($img);
+}
+
+function make_image_rect($width, $height) {
 	$img = imagecreatetruecolor($width, $height);
 
 	// define colors
@@ -695,19 +729,248 @@ function send_image_size($suffix, $width, $height) {
 		);
 	}
 
-	switch ($suffix) {
-	case 'png':
-		imagepng($img);
-		break;
-	case 'gif':
-		imagegif($img);
-		break;
-	case 'jpeg':
-	case 'jpg':
-		imagejpeg($img, NULL, rand(0, 100));
-		break;
+    return $img;
+}
+    
+function randfloat($min, $max) {
+    return $min + ($max - $min)*(rand(0, PHP_INT_MAX)/PHP_INT_MAX);
+}
+
+function make_image_juliaset($width) {
+// Square for simplicity
+$height = $width;
+
+$niter = rand(10, 25);
+
+// Julia set constant
+$cx = randfloat(-1.5, 0.5);
+$cy = randfloat(-1, 1);
+
+// Random limits with varying size
+$jsize = randfloat(0.75, 2.0);
+$xmin = randfloat(-1.5, 1.5 - $jsize);
+$ymin = randfloat(-1.5, 1.5 - $jsize);
+$xmax = $xmin + $jsize;
+$ymax = $ymin + $jsize;
+
+// Scaling factor from pixel coordinates to math, assuming equal for x
+// and y for now
+$scale = ($xmax - $xmin)/$width;
+
+$img = imagecreatetruecolor($width, $height);
+
+// define colours per iterate
+$colour = array();
+for ($i = 0; $i < $niter; $i++) {
+    // Random colour
+    $col = imagecolorallocate($img, rand(0, 255), rand(0, 255), rand(0, 255));
+
+    // Append to array
+    $colour[] = $col;
+}
+
+for ($x = 0; $x < $width; $x++) {
+    for ($y = 0; $y < $height; $y++) {
+        // Flip the y direction to make proper math coordinates
+        $mx = $xmin + $scale*$x;
+        $my = $ymax - $scale*$y;
+        
+        for ($i = 0; $i < $niter; $i++) {
+            $a2 = $mx*$mx + $my*$my;
+           
+            if ($a2 > 4 || $i == $niter - 1) {
+                imagesetpixel($img, $x, $y, $colour[$i]);
+                break;
+            }
+
+            // Complex squaring, keep old mx for new my
+            $mx_new = $mx*$mx - $my*$my + $cx;
+            $my = 2*$mx*$my + $cy;
+            $mx = $mx_new;
+        }
+    }
+}
+
+return $img;
+}
+
+function make_image_ellipses($width, $height) {
+// 2025-11-22 Another curvy variant, based on make_image_rect()
+
+	$img = imagecreatetruecolor($width, $height);
+
+	// set background color
+
+    // Random colour
+    $col = imagecolorallocate($img, rand(0, 255), rand(0, 255), rand(0, 255));
+    
+	imagefill($img, 0, 0, $col);
+
+    // Maximum diameter; keep this equal for x and y, so that the
+    // average shape is not dictated by the image shape. Use geometric
+    // mean to preserve area.
+    $dmax = intval(sqrt($width*$height));
+    
+	// draw some filled ellipses
+	$ell_cnt = rand(3, 20);
+	for ($ell = 0; $ell < $ell_cnt; ++$ell) {
+        $xyz = 10*($ell + 1);  // Make them smaller every iteration
+
+        // Random colour
+        $col = imagecolorallocate($img, rand(0, 255), rand(0, 255), rand(0, 255));
+        
+		imagefilledellipse(
+			$img,
+
+            // Centre x and y
+			rand(0, $width),
+            rand(0, $height),
+
+            // Width and height
+			rand(0, $dmax - $xyz),
+			rand(0, $dmax - $xyz),
+
+            $col,
+		);
 	}
-	imagedestroy($img);
+
+    return $img;
+}
+
+function make_image_voronoi($width, $height) {
+// 2025-11-24
+
+$nseeds = rand(16, 32);
+
+$img = imagecreatetruecolor($width, $height);
+
+// define seed positions and colours
+$seedx = array();
+$seedy = array();
+$colour = array();
+for ($i = 0; $i < $nseeds; $i++) {
+    $col = imagecolorallocate($img, rand(0, 255), rand(0, 255), rand(0, 255));
+
+    // Append to array
+    $colour[] = $col;
+
+    $seedx[] = rand(0, $width-1);
+    $seedy[] = rand(0, $height-1);
+}
+
+// Upper limit of abs2
+$a2max = $width**2 + $height**2;
+
+for ($x = 0; $x < $width; $x++) {
+    for ($y = 0; $y < $height; $y++) {
+
+        // Find the nearest (local) seed index
+        $a2min = $a2max;
+        $li = -1;
+        for ($i = 0; $i < $nseeds; $i++) {
+            $a2 = ($x - $seedx[$i])**2 + ($y - $seedy[$i])**2;
+
+            if ($a2 < $a2min) {
+                $a2min = $a2;
+                $li = $i;
+            }
+        }
+
+        imagesetpixel($img, $x, $y, $colour[$li]);
+    }
+}
+
+return $img;
+}
+
+function rotate($xy, $a) {
+$c = cos($a);
+$s = sin($a);
+return array($xy[0]*$c - $xy[1]*$s, $xy[0]*$s + $xy[1]*$c);
+}
+
+function make_image_lifs_randmode($width) {
+// 2025-11-25 Linear iterated function system using random-game logic
+
+$pi = 3.14159265358979323846;
+
+// Simple square scaling
+$height = $width;
+
+$niter = 10;
+
+// 2025-11-28 Number of final iterates plotted
+$nstages = 3;
+
+// Number of functions/branches
+$ifssize = 3;
+
+// Ratio of initial points to total pixels
+$density = 1/5;
+
+$ninit = intval($density * $width*$height);
+
+// Shift and scale params, forward definition
+$scale = array();
+$shiftx = array();
+$shifty = array();
+for ($i = 0; $i < $niter; $i++) {
+    // Append to array
+    $scale[] = randfloat(0.5, 0.75);
+
+    // Use a scalebox [-1, 1] for the math coordinates
+
+    $maxshift = 0.5;
+    
+    $shiftx[] = $maxshift*randfloat(-1, 1);
+    $shifty[] = $maxshift*randfloat(-1, 1);
+
+    $angle[] = $pi/4 * randfloat(-1, 1);
+}
+
+$img = imagecreatetruecolor($width, $height);
+
+// define colours per iterate
+$colour = array();
+for ($i = 0; $i < $niter; $i++) {
+    // Random colour
+    $col = imagecolorallocate($img, rand(0, 255), rand(0, 255), rand(0, 255));
+
+    // Append to array
+    $colour[] = $col;
+}
+
+// Background colour fill
+$bgcol = imagecolorallocate($img, rand(0, 255), rand(0, 255), rand(0, 255));
+imagefill($img, 0, 0, $bgcol);
+
+for ($pcount = 0; $pcount < $ninit; $pcount++) {
+    // Initial point in [-1, 1]^2
+    $xy = array(randfloat(-1, 1), randfloat(-1, 1));
+
+    for ($i = 0; $i < $niter; $i++) {
+        // Random game
+        $j = rand(0, $ifssize - 1);
+
+        // Scale + rotate and shift
+        $xy = rotate($xy, $angle[$j]);
+        $xy = array(
+            $scale[$j]*$xy[0] + $shiftx[$j],
+            $scale[$j]*$xy[1] + $shifty[$j]);
+
+        // 2025-11-28 Only plot the last few iters
+        if ($i + $nstages >= $niter) {
+            // Scale position to image integer coords
+            $ix = intval(($xy[0] + 1)*$width/2);
+            $iy = intval(($xy[1] + 1)*$height/2);
+
+            // Colour by iter
+            imagesetpixel($img, $ix, $iy, $colour[$i]);
+        }
+    }
+}
+
+return $img;
 }
 
 function randomstring() {
