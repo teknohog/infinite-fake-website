@@ -36,12 +36,17 @@ on its website.
 * Gives every browser who asks a random `favicon.ico` file.
 * Produces random HTML, complete with "content" that includes Latin, B-list celebrities,
   condiments, and underwear teminology.
-* Produces random streams of binary bits for `.torrent`, `.mp3`, `.gz` URL suffixes.
+* Produces `.mp3` files with simple random noise
+* Produces random streams of binary bits for `.torrent`, `.gz` URL suffixes.
 
 ## Prerequisites
 
 A web server with PHP and url rewriting capabilities. I use Lighttpd
 with PHP via mod_fastcgi, and mod_rewrite.
+
+`.mp3` files are generated with ffmpeg, which needs to be compiled
+with lame for the encoding. If these are not available, this program
+returns random binary data instead.
 
 ## mod_rewrite Configuration on Lighttpd
 

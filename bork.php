@@ -973,6 +973,70 @@ for ($pcount = 0; $pcount < $ninit; $pcount++) {
 return $img;
 }
 
+function send_mp3() {
+// Generate an .mp3 audio file with simple sine waves or noise on each
+// channel. Needs ffmpeg with lame.
+
+// Add some delay as this is quite heavy
+$delay = rand(2, 5);
+sleep($delay);
+
+$format = "mp3";
+header("Content-Type: audio/mpeg");
+
+// Reasonable song length, but not too long
+$dur = rand(30, 120);
+
+// Low quality encoding
+$audioq = rand(6, 9);
+
+// Common start for various effects
+$cmd = "ffmpeg";
+
+switch (rand(0, 1)) {
+case 0:
+    // Stereo with different frequencies for extra mess
+
+    for ($i = 0; $i < 2; $i++) {
+        $freq = 10**randfloat(2, 4);
+        $cmd .= " -f lavfi -i \"sine=frequency=" . strval($freq) . ":duration=". strval($dur) . "\"";
+    }
+    $cmd .= " -filter_complex amerge";
+
+    break;
+case 1:
+    // Noise of various colours
+    $ncols = array("white", "pink", "brown", "blue", "violet", "velvet");
+
+    // Copy mono source to stereo
+    //$noisecol = $ncols[array_rand($ncols)];
+    //$cmd .= " -i \"anoisesrc=duration=" . strval($dur) . ":c=" . $noisecol . "\" -ac 2";
+
+    // Different noise on each channel
+    for ($i = 0; $i < 2; $i++) {
+        $noisecol = $ncols[array_rand($ncols)];
+        $cmd .= " -f lavfi -i \"anoisesrc=duration=" . strval($dur) . ":c=" . $noisecol . "\"";
+    }
+    $cmd .= " -filter_complex amerge";
+    
+    break;
+}
+
+// Common end part
+$cmd .= " -metadata title=\"" . randomstring() . "\" -metadata artist=\"" . randomstring() . "\" -metadata album=\"" . randomstring() . "\" -q:a " . strval($audioq) . " -f " . $format . " -";
+
+header("Content-Transfer-Encoding: binary");
+
+// 2025-11-29 If the command doesn't work for some reason, return
+// random binary data as before
+$retval = passthru($cmd);
+if ($retval != null) {
+    $length = rand(2048, 8192);
+    rnd_bin($length);
+}
+
+}
+
 function randomstring() {
 	$ary = array(
 		'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
@@ -1230,11 +1294,7 @@ if (strstr($path, ".json")) {
 		exit(0);
 	}
 	if (strstr($path, ".mp3")) {
-		header("Content-Type: audio/mpeg");
-		header("Content-Transfer-Encoding: binary");
-		header("Content-Length: 4096");
-		# Someday, this should send an mp3-a-like stream of randomness.
-		rnd_bin(4096);
+        send_mp3();
 		exit(0);
 	}
 	if (strstr($path, ".gz")) {
