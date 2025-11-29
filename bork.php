@@ -1037,6 +1037,64 @@ if ($retval != null) {
 
 }
 
+function send_tar_gz() {
+// 2025-11-28 by teknohog after send_gz().  A full tar.gz needs a bit
+// more shell work.
+
+// Generate the filenames here for more variety, but use mktemp for
+// the directory name to be safe. Though I guess PHP also has one...
+
+$nfiles = rand(2, 10);
+
+// Space-delimited list is simple for the shell script
+$files = "";
+for ($i = 0; $i < $nfiles; $i++)
+    // .dat is a valid name for random data :D
+    $files .= random_identifier() . ".dat ";
+
+// Use single quotes so that $TDIR etc. don't get interpreted as PHP
+// variables.
+
+$cmd = 'FILES="' . $files . '"
+# Find a suitable tempdir, prefer ramdisk to avoid disk wear
+for BASEDIR in /dev/shm /tmp; do
+[ -d $BASEDIR ] && break
+done
+
+# Use a name without the tmp. prefix
+TDIR=$(mktemp -d ${BASEDIR}/XXXXXXXXXX)
+
+# Exit in case BASEDIR was not writeable, or other errors
+cd $TDIR || exit
+
+for FILE in $FILES; do
+
+# 2 to 20 blocks
+COUNT=$(((RANDOM % 21) + 2))
+
+dd if=/dev/urandom bs=1K count=$COUNT of=$FILE
+done
+
+cd ..
+
+# No full path, just this dir
+tar czf - $(basename $TDIR)
+
+rm -r $TDIR
+';
+
+header("Content-Type: application/octet-stream");
+header("Content-Transfer-Encoding: binary");
+
+// 2025-11-29 If the command doesn't work for some reason, return
+// random binary data as before
+$retval = passthru($cmd);
+if ($retval != null) {
+    $length = rand(2048, 8192);
+    rnd_bin($length);
+}
+}
+
 function randomstring() {
 	$ary = array(
 		'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
@@ -1297,13 +1355,8 @@ if (strstr($path, ".json")) {
         send_mp3();
 		exit(0);
 	}
-	if (strstr($path, ".gz")) {
-		header("Content-Type: application/octet-stream");
-		header("Content-Transfer-Encoding: binary");
-		# Should I experiment with sending more/less than
-		# Content-Length says, just to be a punk?
-		#header("Content-Length: 4096");
-		rnd_bin(8192);
+	if (strstr($path, ".tar.gz")) {
+        send_tar_gz();
 		exit(0);
 	}
     if (($path != '/') && !strpos($path, ".htm") && !strpos($path, ".php") && !strpos($path, ".shtml")) {

@@ -37,7 +37,8 @@ on its website.
 * Produces random HTML, complete with "content" that includes Latin, B-list celebrities,
   condiments, and underwear teminology.
 * Produces `.mp3` files with simple random noise
-* Produces random streams of binary bits for `.torrent`, `.gz` URL suffixes.
+* Produces `.tar.gz` packages containing files of random data
+* Produces random streams of binary bits for `.torrent` URL suffixes.
 
 ## Prerequisites
 
@@ -47,6 +48,9 @@ with PHP via mod_fastcgi, and mod_rewrite.
 `.mp3` files are generated with ffmpeg, which needs to be compiled
 with lame for the encoding. If these are not available, this program
 returns random binary data instead.
+
+`.tar.gz` files are generated with basic Unix shell tools. If these
+are not available, this program returns random binary data instead.
 
 ## mod_rewrite Configuration on Lighttpd
 
