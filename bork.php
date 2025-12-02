@@ -1023,7 +1023,7 @@ case 1:
 }
 
 // Common end part
-$cmd .= " -metadata title=\"" . randomstring() . "\" -metadata artist=\"" . randomstring() . "\" -metadata album=\"" . randomstring() . "\" -q:a " . strval($audioq) . " -f " . $format . " -";
+$cmd .= " -metadata title=\"" . random_identifier() . "\" -metadata artist=\"" . random_identifier() . "\" -metadata album=\"" . random_identifier() . "\" -q:a " . strval($audioq) . " -f " . $format . " -";
 
 header("Content-Transfer-Encoding: binary");
 
