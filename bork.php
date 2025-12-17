@@ -1027,7 +1027,7 @@ $lig = new LoremIpsumGenerator();
 $aat = array(); // artist, album, title
 
 for ($i = 0; $i < 3; $i++) {
-    $s = $lig->getContent(rand(2, 5), 'plain');
+    $s = $lig->getContent(rand(1, 5), 'plain');
 
     // Remove final space and period
     $s = trim($s);
