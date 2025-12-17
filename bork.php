@@ -1022,8 +1022,22 @@ case 1:
     break;
 }
 
+// 2025-12-17 Use the LIG for more verbose metadata
+$lig = new LoremIpsumGenerator();
+$aat = array(); // artist, album, title
+
+for ($i = 0; $i < 3; $i++) {
+    $s = $lig->getContent(rand(2, 5), 'plain');
+
+    // Remove final space and period
+    $s = trim($s);
+    $s = trim($s, ".");
+
+    $aat[] = $s;
+}
+
 // Common end part
-$cmd .= " -metadata title=\"" . random_identifier() . "\" -metadata artist=\"" . random_identifier() . "\" -metadata album=\"" . random_identifier() . "\" -q:a " . strval($audioq) . " -f " . $format . " -";
+$cmd .= " -metadata artist=\"" . $aat[0] . "\" -metadata album=\"" . $aat[1] . "\" -metadata title=\"" . $aat[2] . "\" -q:a " . strval($audioq) . " -f " . $format . " -";
 
 header("Content-Transfer-Encoding: binary");
 
