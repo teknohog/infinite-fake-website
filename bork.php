@@ -993,34 +993,26 @@ $audioq = rand(6, 9);
 // Common start for various effects
 $cmd = "ffmpeg";
 
-switch (rand(0, 1)) {
-case 0:
-    // Stereo with different frequencies for extra mess
+$noisecols = array("white", "pink", "brown", "blue", "violet", "velvet");
 
-    for ($i = 0; $i < 2; $i++) {
+// 2026-01-21 Any combination of noise and sine waves
+for ($i = 0; $i < 2; $i++) {
+    switch (rand(0, 1)) {
+    case 0:
         $freq = 10**randfloat(2, 4);
-        $cmd .= " -f lavfi -i \"sine=frequency=" . strval($freq) . ":duration=". strval($dur) . "\"";
-    }
-    $cmd .= " -filter_complex amerge";
 
-    break;
-case 1:
-    // Noise of various colours
-    $ncols = array("white", "pink", "brown", "blue", "violet", "velvet");
+        // 2026-01-21 Add beeps every second, zero factor for no beeps
+        $beep_factor = (rand(0, 1) == 1) ? randfloat(0, 2) : 0;
 
-    // Copy mono source to stereo
-    //$noisecol = $ncols[array_rand($ncols)];
-    //$cmd .= " -i \"anoisesrc=duration=" . strval($dur) . ":c=" . $noisecol . "\" -ac 2";
-
-    // Different noise on each channel
-    for ($i = 0; $i < 2; $i++) {
-        $noisecol = $ncols[array_rand($ncols)];
+        $cmd .= " -f lavfi -i \"sine=frequency=" . strval($freq) . ":duration=" . strval($dur) . ":beep_factor=" . strval($beep_factor) . "\"";
+        break;
+    case 1:
+        $noisecol = $noisecols[array_rand($noisecols)];
         $cmd .= " -f lavfi -i \"anoisesrc=duration=" . strval($dur) . ":c=" . $noisecol . "\"";
+        break;
     }
-    $cmd .= " -filter_complex amerge";
-    
-    break;
 }
+$cmd .= " -filter_complex amerge";
 
 // 2025-12-17 Use the LIG for more verbose metadata
 $lig = new LoremIpsumGenerator();
