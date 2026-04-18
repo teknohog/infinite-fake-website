@@ -819,6 +819,9 @@ function make_image_ellipses($width, $height) {
         // Random colour
         $col = imagecolorallocate($img, rand(0, 255), rand(0, 255), rand(0, 255));
         
+        // 2026-04-18 Ensure max width/height of ellipse is sensible
+        $maxwh = max($dmax - $xyz, 1);
+        
 		imagefilledellipse(
 			$img,
 
@@ -827,9 +830,9 @@ function make_image_ellipses($width, $height) {
             rand(0, $height),
 
             // Width and height
-			rand(0, $dmax - $xyz),
-			rand(0, $dmax - $xyz),
-
+			rand(0, $maxwh),
+			rand(0, $maxwh),
+            
             $col,
 		);
 	}
